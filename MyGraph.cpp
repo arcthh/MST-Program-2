@@ -89,8 +89,25 @@ MyHelper::MyHelper()
 {
 }
 
+int findParent(vector<int>& parent, int vertex) {
+    if (parent[vertex] == vertex) {
+        return vertex;
+    }
+    return parent[vertex] = findParent(parent, parent[vertex]);
+}
+
+
 vector<Link> Task1(int n, vector<Link>& pipes, MyHelper& helper)
 {
+
+   // Define a parent array to track the parent of each vertex in the disjoint-set
+   vector<int> parent(n);
+
+   // Initialize the parent array such that each vertex is its own parent initially
+   for (int i = 0; i < n; i++) {
+      parent[i] = i;
+   }
+
    vector<Link> res;
 
    //BEGIN IMPLEMENTATION OF KRUSKALS ALGORITHM
@@ -99,18 +116,27 @@ vector<Link> Task1(int n, vector<Link>& pipes, MyHelper& helper)
 
    // Create a MyGraph object
    MyGraph graph = MyGraph(n);
+   //check for cycles
     for (const Link& pipe : pipes) {
-        if (graph.addEdge(pipe.v1, pipe.v2, pipe.w)) {
-            res.push_back(pipe);
+         //checks to see if parents are the same or not
+         int parent1 = findParent(parent, pipe.v1 - 1);
+         int parent2 = findParent(parent, pipe.v2 - 1);
+
+             if (parent1 != parent2 && graph.addEdge(pipe.v1, pipe.v2, pipe.w)) {
+               // Adding this edge doesn't create a cycle
+               // add to result and change parent
+               res.push_back(pipe);
+               parent[parent1] = parent2;
+            }
             // Check if we have added enough edges to form an MST (n-1 edges)
             if (res.size() == n - 1) {
                 break;
             }
-        }
     }
     helper.mst = res;
    return res;
 }
+
 /*
 this function
 takes in the number of cities (n), the original set of pipes, a newPipe, and the helper object that
@@ -131,6 +157,14 @@ pair<bool, Link> Task2(int n, vector<Link>& pipes, Link newPipe, MyHelper helper
 {
    //load up the mst
    vector<Link> OGmst = helper.mst;
+   // Define a parent array to track the parent of each vertex in the disjoint-set
+   vector<int> parent(n);
+
+   // Initialize the parent array such that each vertex is its own parent initially
+   for (int i = 0; i < n; i++) {
+      parent[i] = i;
+   }
+
 
    //ensure  we don't modify
    vector<Link> pipesT2 = pipes;
@@ -150,25 +184,31 @@ pair<bool, Link> Task2(int n, vector<Link>& pipes, Link newPipe, MyHelper helper
 
    // Create a MyGraph object
    MyGraph graph = MyGraph(n);
-    for (const Link& pipe : pipesT2) {
-        if (graph.addEdge(pipe.v1, pipe.v2, pipe.w)) {
-            sol2.push_back(pipe);
+   //check for cycles
+    for (const Link& pipe : pipes) {
+         //checks to see if parents are the same or not
+         int parent1 = findParent(parent, pipe.v1 - 1);
+         int parent2 = findParent(parent, pipe.v2 - 1);
+
+             if (parent1 != parent2 && graph.addEdge(pipe.v1, pipe.v2, pipe.w)) {
+               // Adding this edge doesn't create a cycle
+               // add to result and change parent
+               sol2.push_back(pipe);
+               parent[parent1] = parent2;
+            }
             // Check if we have added enough edges to form an MST (n-1 edges)
             if (sol2.size() == n - 1) {
                 break;
             }
-        }
     }
 
    //THIS PART IS NOT WORKING PROPERLY
 
-    // Compare the two MSTs. If it is modified, they are not equal
-    bool isModified = !(OGmst == sol2);
+    // Compare the two MSTs; If it is modified, they are not equal
+    bool isModified = (OGmst == sol2);
 
     std::pair<bool, Link> sol;
     sol.first = isModified;
-    sol.second = (isModified) ? OGmst[0] : Link(); // You can return any Link if not modified
-
 
   return sol;
 }

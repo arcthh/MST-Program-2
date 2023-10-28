@@ -50,6 +50,6 @@ public:
     int x;
     vector<Link> mst;
 };
-
+int findParent(vector<int>& parent, int vertex);
 vector<Link> Task1(int n, vector<Link>& pipes, MyHelper& helper);
 pair<bool, Link> Task2(int n, vector<Link>& pipes, Link newPipe, MyHelper helper);
