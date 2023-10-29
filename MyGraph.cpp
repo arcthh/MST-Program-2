@@ -152,7 +152,7 @@ up the algorithm if you are willing to store some extra information when you cre
 may be able to answer the question faster. Also remember the question I brought up in class:
 “Given a tree, if you add one edge, how many cycle can it form?
 */
-
+//falta task two
 pair<bool, Link> Task2(int n, vector<Link>& pipes, Link newPipe, MyHelper helper)
 {
    //load up the mst
@@ -177,7 +177,7 @@ pair<bool, Link> Task2(int n, vector<Link>& pipes, Link newPipe, MyHelper helper
 
 
    //new solution
-   vector<Link> sol2;
+   vector<Link> mstNew;
 
    //sort in asc order
    sort(pipesT2.begin(), pipesT2.end());
@@ -185,7 +185,7 @@ pair<bool, Link> Task2(int n, vector<Link>& pipes, Link newPipe, MyHelper helper
    // Create a MyGraph object
    MyGraph graph = MyGraph(n);
    //check for cycles
-    for (const Link& pipe : pipes) {
+    for (const Link& pipe : pipesT2) {
          //checks to see if parents are the same or not
          int parent1 = findParent(parent, pipe.v1 - 1);
          int parent2 = findParent(parent, pipe.v2 - 1);
@@ -193,22 +193,42 @@ pair<bool, Link> Task2(int n, vector<Link>& pipes, Link newPipe, MyHelper helper
              if (parent1 != parent2 && graph.addEdge(pipe.v1, pipe.v2, pipe.w)) {
                // Adding this edge doesn't create a cycle
                // add to result and change parent
-               sol2.push_back(pipe);
+               mstNew.push_back(pipe);
                parent[parent1] = parent2;
             }
             // Check if we have added enough edges to form an MST (n-1 edges)
-            if (sol2.size() == n - 1) {
+            if (mstNew.size() == n - 1) {
                 break;
             }
     }
 
-   //THIS PART IS NOT WORKING PROPERLY
+   //
 
     // Compare the two MSTs; If it is modified, they are not equal
-    bool isModified = (OGmst == sol2);
+    //we have two msts, the original MST, and the mstNew
+    //what i need to do is compare the two vectore, and determine which link is not in the new one, and if it is the new edge that did not get put in, return false with an empty ink
+      std::pair<bool, Link> sol;
 
-    std::pair<bool, Link> sol;
-    sol.first = isModified;
+    sol.first = false;  // Assume the MSTs are initially equal.
 
+    // Check if the sizes of the two MSTs are different.
+    if (mstNew.size() != OGmst.size()) {
+        sol.first = true;
+        sol.second = {};  // Empty Link since the MSTs have different sizes.
+        return sol;
+    }
+
+    // Compare the two MSTs element by element.
+    for (size_t i = 0; i < mstNew.size(); i++) {
+        const Link& l1 = mstNew[i];
+        const Link& l2 = OGmst[i];
+
+        // If any pair of links differs, the MSTs are not equal.
+        if (!(l1 == l2)) {
+            sol.first = true;
+            sol.second = l2;  // Return the first differing link.
+            break;
+        }
+    }
   return sol;
 }
