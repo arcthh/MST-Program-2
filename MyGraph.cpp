@@ -9,17 +9,20 @@ ostream& operator<<(ostream& os, const Link& l)
    os << l.v1 << " " << l.v2 << " " << l.w;
    return os;
 }
-
+//CONSTRUCTOR to initialize a graph
 MyGraph::MyGraph(int n)
 {
    this->nVert = n;
    this->adjacencyList.resize(n);
 }
 
+//copy constructor
 MyGraph::MyGraph(const MyGraph& g) : nVert(g.nVert), adjacencyList(g.adjacencyList) {}
 
+//add edge
 bool MyGraph::addEdge(int a, int b, float w)
 {
+   //checks to see that the vertices 'a' and 'b' are between the city limit and the number cities and are not equal
    if (a >= 1 && a <= nVert && b >= 1 && b <= nVert && a != b) {
          // Create a Link structure for the edge
          Link link;
@@ -34,29 +37,29 @@ bool MyGraph::addEdge(int a, int b, float w)
          link.w = w;
 
          // Check if the edge already exists in the adjacency list
-         //this loop iterates through the adj list for v1, since it will point to v2.
+         //this loop iterates through the adj list for v1, since it will point to v2
          for (const Link& existingLink : adjacencyList[link.v1 - 1]) {
                if (existingLink.v2 == link.v2) {
                   return false; // Edge already exists
                }
          }
-         // Add the edge to the adjacency list
+         // Add the edge to the adjacency list for its respective city
          adjacencyList[link.v1 - 1].push_back(link);
          return true;
       }
       return false;
 }
-
+//output function
 void MyGraph::output(std::ostream& os) {
     os << nVert << '\n';
-   // Iterate through the adjacency list and print the edges
+   // Iterate through the adjacency list and print the edges. Adjacency list is accessed through [][], so use range base for loop
     for (int i = 0; i < nVert; i++) {
         for (const Link& link : adjacencyList[i]) {
             os << link.v1 << ' ' << link.v2 << ' ' << link.w << '\n';
         }
     }
 }
-
+//weight function will return a boolean and the weight
 pair<bool, float> MyGraph::weight(int a, int b)
 {
    pair<bool, float> res;
@@ -74,7 +77,7 @@ pair<bool, float> MyGraph::weight(int a, int b)
        vertex2 = a;
    }
 
-   //check link to see if it exists
+   //check link to see if it exists, iterate through [][]
    if (a>= 1 && a<= nVert && b>=1 && b<= nVert && a!=b) {
       for (const Link& link : adjacencyList[vertex1 - 1]) {
          if (link.v2 == vertex2) {
@@ -88,15 +91,15 @@ pair<bool, float> MyGraph::weight(int a, int b)
 MyHelper::MyHelper()
 {
 }
-
+//function made to find a root of the vertex, uses recursion 
 int findParent(vector<int>& parent, int vertex) {
     if (parent[vertex] == vertex) {
-        return vertex;
+        return vertex; //if found return
     }
-    return parent[vertex] = findParent(parent, parent[vertex]);
+    return parent[vertex] = findParent(parent, parent[vertex]); //keeps searching
 }
 
-
+//task one is meant to be MST, i will be using Kruskals
 vector<Link> Task1(int n, vector<Link>& pipes, MyHelper& helper)
 {
 
@@ -118,12 +121,11 @@ vector<Link> Task1(int n, vector<Link>& pipes, MyHelper& helper)
    MyGraph graph = MyGraph(n);
    //check for cycles
     for (const Link& pipe : pipes) {
-         //checks to see if parents are the same or not
+         //checks to see if root node / parent are the same or not
          int parent1 = findParent(parent, pipe.v1 - 1);
          int parent2 = findParent(parent, pipe.v2 - 1);
-
+            //if they do not share a root, they will not create a cycle
              if (parent1 != parent2 && graph.addEdge(pipe.v1, pipe.v2, pipe.w)) {
-               // Adding this edge doesn't create a cycle
                // add to result and change parent
                res.push_back(pipe);
                parent[parent1] = parent2;
@@ -137,22 +139,7 @@ vector<Link> Task1(int n, vector<Link>& pipes, MyHelper& helper)
    return res;
 }
 
-/*
-this function
-takes in the number of cities (n), the original set of pipes, a newPipe, and the helper object that
-is being passed, and return whether the new pipe will modify the original solution. If it does, the
-pair of return will contains true, follow by the Link that is displaced. Otherwise it will return
-false, and the Link can be anything (it will be ignored) by the main program.
-Notice that in this case, the helper object is passed by value. So you cannot modify it inside the
-function
-
-The second task basically is asking if I add an edge to the graph, will it change the MST?
-Obviously you can rerun the MST algorithm from scratch. However, if you may be able to speed
-up the algorithm if you are willing to store some extra information when you create the MST, you
-may be able to answer the question faster. Also remember the question I brought up in class:
-“Given a tree, if you add one edge, how many cycle can it form?
-*/
-//falta task two
+//task two works by checking if MST will be changed with addition of new pipe
 pair<bool, Link> Task2(int n, vector<Link>& pipes, Link newPipe, MyHelper helper)
 {
    //load up the mst
@@ -174,7 +161,6 @@ pair<bool, Link> Task2(int n, vector<Link>& pipes, Link newPipe, MyHelper helper
    // for (const Link &pipe : pipesT2) {
    //   cout << pipe.v1 << "->" << pipe.v2 << " " << pipe.w << "  ";
    // }
-
 
    //new solution
    vector<Link> mstNew;
@@ -201,33 +187,22 @@ pair<bool, Link> Task2(int n, vector<Link>& pipes, Link newPipe, MyHelper helper
                 break;
             }
     }
-
-   //
-
     // Compare the two MSTs; If it is modified, they are not equal
     //we have two msts, the original MST, and the mstNew
     //what i need to do is compare the two vectore, and determine which link is not in the new one, and if it is the new edge that did not get put in, return false with an empty ink
       std::pair<bool, Link> sol;
 
-    sol.first = false;  // Assume the MSTs are initially equal.
-
-    // Check if the sizes of the two MSTs are different.
-    if (mstNew.size() != OGmst.size()) {
-        sol.first = true;
-        sol.second = {};  // Empty Link since the MSTs have different sizes.
-        return sol;
-    }
+    sol.first = false;  // Assume the MSTs are initially equal
 
     // Compare the two MSTs element by element.
     for (size_t i = 0; i < mstNew.size(); i++) {
         const Link& l1 = mstNew[i];
         const Link& l2 = OGmst[i];
 
-        // If any pair of links differs, the MSTs are not equal.
+        // If any pair of links differs, the MSTs are not equal
         if (!(l1 == l2)) {
             sol.first = true;
-            sol.second = l2;  // Return the first differing link.
-            break;
+            sol.second = l2;  // Return the  differing link
         }
     }
   return sol;

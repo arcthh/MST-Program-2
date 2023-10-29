@@ -7,7 +7,7 @@
 
 main()
 {
-   ifstream ifile("test2_1.txt");
+   ifstream ifile("test2_2.txt");
    int n, e;
    vector<float> satcost;
 
